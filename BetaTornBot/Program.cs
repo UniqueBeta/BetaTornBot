@@ -3,6 +3,7 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+using WarPay;
 
 var client = new DiscordSocketClient(new DiscordSocketConfig
 {
