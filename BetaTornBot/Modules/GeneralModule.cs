@@ -12,5 +12,12 @@ namespace BetaTornBot.Modules
         {
             await RespondAsync($"Pong! {Context.Client.CurrentUser.GlobalName}");
         }
+
+
+        [SlashCommand("format", "TestMethod")]
+        public async Task Format()
+        {
+            await RespondAsync($"FORMAT:\n# * This is a header\n## * whattttt");
+        }
     }
 }
