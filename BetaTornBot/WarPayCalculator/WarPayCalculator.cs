@@ -31,6 +31,7 @@ public static class WarPayCalculator
     /// <param name="bonusHitScore">Flat score for every chain-bonus hit (e.g. 10).</param>
     /// <param name="apiKey">Torn API key with faction access.</param>
     /// <param name="totalCacheValue">Total value to pay out. Each player's <see cref="PlayerWarPay.Payout"/> is this times their share (33% = 0.33), rounded down.</param>
+    /// <param name="factionTake">Percentage of war pay that goes to the faction (e.g. 20 = 20%).</param>
     /// <param name="databasePath">SQLite file to save to and read from. Use one file per faction.</param>
     /// <exception cref="TornApiException">Torn returned an error or an unexpected response.</exception>
     public static async Task<WarPayResult> CalculateWarPayAsync(
@@ -38,16 +39,22 @@ public static class WarPayCalculator
         double outsideHitScore,
         double bonusHitScore,
         string apiKey,
-        long totalCacheValue,
+        double totalCacheValue,
+        double factionTake,
         string databasePath = DefaultDatabasePath,
         CancellationToken cancellationToken = default)
+
     {
+
+        double facPayPercentage = 1 - (factionTake / 100);
+        long payoutPool = (long)(totalCacheValue * 1_000_000_000 * facPayPercentage);
+
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new ArgumentException("An API key is required.", nameof(apiKey));
         if (string.IsNullOrWhiteSpace(databasePath))
             throw new ArgumentException("A database path is required.", nameof(databasePath));
-        if (totalCacheValue < 0)
-            throw new ArgumentOutOfRangeException(nameof(totalCacheValue), "The cache value can't be negative.");
+        if (payoutPool < 0)
+            throw new ArgumentOutOfRangeException(nameof(payoutPool), "The payout pool can't be negative.");
 
         var options = new WarPayOptions
         {
@@ -60,7 +67,7 @@ public static class WarPayCalculator
             options.OutsideHitScore,
             options.BonusHitScore,
             options.AssistWindowSeconds,
-            totalCacheValue);
+            payoutPool);
 
         var api = new TornApiClient(SharedHttp, apiKey);
 
@@ -69,7 +76,7 @@ public static class WarPayCalculator
         WarWindow window = await api.GetWarWindowAsync(null, cancellationToken);
 
         WarPayResult Build(List<Attack> attacks) =>
-            WarPayEngine.Run(attacks, factionId, options, totalCacheValue) with
+            WarPayEngine.Run(attacks, factionId, options, payoutPool) with
             {
                 FactionId = factionId,
                 WarId = window.WarId,

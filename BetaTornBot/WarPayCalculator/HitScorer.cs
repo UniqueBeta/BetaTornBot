@@ -18,7 +18,7 @@ internal static class HitScorer
     // Results that do not count as a successful hit.
     private static readonly HashSet<string> FailedResults = new(StringComparer.OrdinalIgnoreCase)
     {
-        "Lost", "Stalemate", "Assist", "Escape", "Timeout", "None", ""
+        "Lost", "Stalemate", "Assist", "Escape", "Timeout", "None", "Mugged"
     };
 
     public static bool IsSuccessful(Attack a) => !FailedResults.Contains(a.Result ?? "");
