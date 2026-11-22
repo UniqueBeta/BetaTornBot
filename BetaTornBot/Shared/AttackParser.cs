@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace WarPay;
+namespace BetaTornBot.Shared;
 
 /// <summary>
 /// Turns one JSON attack from the Torn API into an <see cref="Attack"/>.
@@ -17,6 +17,9 @@ internal static class AttackParser
         string attackerName = Str(attacker, "name");
         if (attackerName.Length == 0) attackerName = Str(el, "attacker_name");
 
+        string defenderName = Str(defender, "name");
+        if (defenderName.Length == 0) defenderName = Str(el, "defender_name");
+
         long started = Int(el, "started") ?? Int(el, "timestamp_started") ?? 0;
         long ended = Int(el, "ended") ?? Int(el, "timestamp_ended") ?? started;
 
@@ -31,7 +34,8 @@ internal static class AttackParser
             Result: Str(el, "result"),
             RespectGain: Dbl(el, "respect_gain") ?? Dbl(el, "respect") ?? 0,
             Chain: (int)(Int(el, "chain") ?? 0),
-            IsRankedWar: IsRankedWar(el));
+            IsRankedWar: IsRankedWar(el),
+            DefenderName: defenderName);
     }
 
     private static bool IsRankedWar(JsonElement el)

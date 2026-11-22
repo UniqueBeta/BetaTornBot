@@ -1,4 +1,4 @@
-namespace WarPay;
+namespace BetaTornBot.Shared;
 
 /// <summary>One attack from the faction attack log, reduced to what the calculation needs.</summary>
 internal sealed record Attack(
@@ -12,4 +12,5 @@ internal sealed record Attack(
     string Result,
     double RespectGain,
     int Chain,
-    bool IsRankedWar);
+    bool IsRankedWar,
+    string DefenderName = "");

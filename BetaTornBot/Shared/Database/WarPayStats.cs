@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
+using WarPay;
 
-namespace WarPay;
+namespace BetaTornBot.Shared;
 
 /// <summary>What to rank players by in <see cref="WarPayStats.GetTopPlayers"/>.</summary>
 public enum TopPlayerOrder

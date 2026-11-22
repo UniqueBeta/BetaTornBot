@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BetaTornBot.Shared;
 
 namespace WarPay;
 
@@ -15,17 +16,9 @@ internal static class HitScorer
         10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000
     };
 
-    // Results that do not count as a successful hit.
-    private static readonly HashSet<string> FailedResults = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Lost", "Stalemate", "Assist", "Escape", "Timeout", "None", "Mugged"
-    };
-
-    public static bool IsSuccessful(Attack a) => !FailedResults.Contains(a.Result ?? "");
-
     public static ScoredHit Score(Attack a, WarPayOptions o)
     {
-        if (!IsSuccessful(a)) return new ScoredHit(0, HitKind.None);
+        if (!AttackResults.IsSuccessful(a)) return new ScoredHit(0, HitKind.None);
 
         bool isBonus = ChainMilestones.Contains(a.Chain);
 

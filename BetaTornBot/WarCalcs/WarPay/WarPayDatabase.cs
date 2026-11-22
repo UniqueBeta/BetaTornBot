@@ -2,7 +2,7 @@
 using System.IO;
 using Microsoft.Data.Sqlite;
 
-namespace WarPay;
+namespace BetaTornBot.WarCalcs.WarPayCalculator;
 
 /// <summary>Opens the SQLite file and makes sure the tables exist.</summary>
 internal static class WarPayDatabase
@@ -16,7 +16,9 @@ CREATE TABLE IF NOT EXISTS wars (
     faction_id    INTEGER NOT NULL,
     start_time    INTEGER NOT NULL,
     end_time      INTEGER NOT NULL,
-    attack_count  INTEGER NOT NULL
+    attack_count  INTEGER NOT NULL,
+    -- 0 for wars saved before defender names were stored; those attack logs get fetched again once.
+    has_defender_info INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS attacks (
@@ -32,6 +34,7 @@ CREATE TABLE IF NOT EXISTS attacks (
     respect_gain        REAL    NOT NULL,
     chain               INTEGER NOT NULL,
     is_ranked_war       INTEGER NOT NULL,
+    defender_name       TEXT    NOT NULL DEFAULT '',
     PRIMARY KEY (war_id, id)
 );
 
@@ -91,12 +94,42 @@ CREATE INDEX IF NOT EXISTS idx_wars_start ON wars(start_time);
             using var command = connection.CreateCommand();
             command.CommandText = Schema;
             command.ExecuteNonQuery();
+
+            // Database files created by an earlier version don't have the newer columns yet.
+            EnsureColumn(connection, "wars", "has_defender_info", "INTEGER NOT NULL DEFAULT 0");
+            EnsureColumn(connection, "attacks", "defender_name", "TEXT NOT NULL DEFAULT ''");
             return connection;
         }
         catch
         {
             connection.Dispose();
             throw;
+        }
+    }
+
+    // Table and column names here are fixed strings from this file, never user input.
+    private static void EnsureColumn(SqliteConnection connection, string table, string column, string definition)
+    {
+        using (var info = connection.CreateCommand())
+        {
+            info.CommandText = $"PRAGMA table_info({table})";
+            using var reader = info.ExecuteReader();
+            while (reader.Read())
+            {
+                if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase))
+                    return;
+            }
+        }
+
+        try
+        {
+            using var alter = connection.CreateCommand();
+            alter.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {definition}";
+            alter.ExecuteNonQuery();
+        }
+        catch (SqliteException ex) when (ex.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
+        {
+            // Another process added it between our check and the ALTER. That's fine.
         }
     }
 }

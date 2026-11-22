@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WarPay;
+namespace BetaTornBot.Shared;
 
 internal readonly record struct WarWindow(long? WarId, long From, long To);
 
@@ -78,6 +78,40 @@ internal sealed class TornApiClient
         long start = ReadLong(war, "start") ?? throw new TornApiException("Ranked war has no start time.");
         long end = ReadLong(war, "end") is > 0 and long e ? e : DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         return new WarWindow(ReadLong(war, "id"), start, end);
+    }
+
+    /// <summary>
+    /// GET v2/faction/rankedwars: the war that is running right now (already started, no end time yet).
+    /// The window ends "now", because the war is still going.
+    /// </summary>
+    public async Task<WarWindow> GetCurrentWarWindowAsync(CancellationToken ct)
+    {
+        var json = await GetAsync("v2/faction/rankedwars", ct);
+
+        List<JsonElement> wars;
+        try
+        {
+            wars = json.GetProperty("rankedwars").EnumerateArray().ToList();
+        }
+        catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException)
+        {
+            throw new TornApiException("Unexpected response from faction/rankedwars (no rankedwars array).", ex);
+        }
+
+        long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+        var running = wars
+            .Where(w => (ReadLong(w, "start") ?? long.MaxValue) <= now
+                        && (ReadLong(w, "end") is not long end || end <= 0 || end > now))
+            .OrderByDescending(w => ReadLong(w, "start") ?? 0)
+            .ToList();
+
+        if (running.Count == 0)
+            throw new TornApiException("No ranked war is running right now.");
+
+        var war = running[0];
+        long start = ReadLong(war, "start") ?? throw new TornApiException("Ranked war has no start time.");
+        return new WarWindow(ReadLong(war, "id"), start, now);
     }
 
     /// <summary>GET v2/faction/attacks for the window, following the paging links until done.</summary>

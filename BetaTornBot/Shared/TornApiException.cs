@@ -1,6 +1,6 @@
 using System;
 
-namespace WarPay;
+namespace BetaTornBot.Shared;
 
 /// <summary>Thrown when the Torn API returns an error or a response the library can't understand.</summary>
 public sealed class TornApiException : Exception
