@@ -1,15 +1,12 @@
-using System;
+﻿using System;
 using System.IO;
 using Microsoft.Data.Sqlite;
 
-namespace BetaTornBot.Shared;
+namespace WarPay;
 
 /// <summary>Opens the SQLite file and makes sure the tables exist.</summary>
 internal static class WarPayDatabase
 {
-    /// <summary>Where wars are saved unless a path is given. Keep in step with the default in the war pay calculator.</summary>
-    public const string DefaultPath = "warpay.db";
-
     // One row per saved war. The attack log is kept so results can be recalculated without the API.
     private const string Schema = @"
 PRAGMA foreign_keys = ON;

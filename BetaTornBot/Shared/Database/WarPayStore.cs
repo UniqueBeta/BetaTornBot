@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
+using BetaTornBot.Shared;
 using Microsoft.Data.Sqlite;
+using WarPay;
 
-namespace BetaTornBot.Shared;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
 
 /// <summary>The settings a result was calculated with. A saved result is reused only if these match.</summary>
 internal sealed record WarSettings(

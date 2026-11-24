@@ -30,9 +30,21 @@ public static class WarPerformanceCalculator
     /// <exception cref="TornApiException">Torn returned an error, or no ranked war is running.</exception>
     public static async Task<WarPerformanceResult> CalculatePerformanceAsync(
         string apiKey,
+        long? warId = null,
         CancellationToken cancellationToken = default)
     {
-        var (factionId, window, attacks) = await CurrentWar.LoadAsync(apiKey, cancellationToken);
+        long factionId;
+        WarWindow window;
+        List<Attack> attacks;
+
+        if (warId is long id)
+        {
+            (factionId, window, attacks) = await War.LoadAsync(apiKey, id, cancellationToken);
+        }
+        else
+        {
+            (factionId, window, attacks) = await War.LoadAsync(apiKey, cancellationToken);
+        }
 
         var members = new Dictionary<long, Tally>();
         Tally Get(long id)
@@ -63,7 +75,7 @@ public static class WarPerformanceCalculator
         }
 
         // Respect the enemy earned from hitting each member.
-        foreach (var a in CurrentWar.HitsTaken(attacks, factionId))
+        foreach (var a in War.HitsTaken(attacks, factionId))
         {
             enemyTotal += a.RespectGain;
             enemyHits++;

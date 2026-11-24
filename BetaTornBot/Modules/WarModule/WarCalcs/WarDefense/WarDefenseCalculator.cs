@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using BetaTornBot.Modules.WarModule.WarCalcs.UpcomingTargets;
 using BetaTornBot.Modules.WarModule.WarCalcs.WarDefense;
 using BetaTornBot.Shared;
+using Discord.Commands;
 
 namespace WarPay;
 
@@ -24,14 +27,27 @@ public static partial class WarDefenseCalculator
     /// <exception cref="TornApiException">Torn returned an error, or no ranked war is running.</exception>
     public static async Task<WarDefenseResult> CountTimesHitAsync(
         string apiKey,
+        long? warId = null,
         CancellationToken cancellationToken = default)
     {
-        var (factionId, window, attacks) = await CurrentWar.LoadAsync(apiKey, cancellationToken);
+        long factionId;
+        WarWindow window;
+        List<Attack> attacks; 
+
+        if (warId is long id)
+        {
+            (factionId, window, attacks) = await War.LoadAsync(apiKey, id, cancellationToken);
+        }
+        else
+        {
+            (factionId, window, attacks) = await War.LoadAsync(apiKey, cancellationToken);
+        }
+
 
         var perPlayer = new Dictionary<long, (string Name, int Count)>();
         int total = 0;
 
-        foreach (var a in CurrentWar.HitsTaken(attacks, factionId))
+        foreach (var a in War.HitsTaken(attacks, factionId))
         {
             long defenderId = a.DefenderId!.Value;
             perPlayer.TryGetValue(defenderId, out var entry);

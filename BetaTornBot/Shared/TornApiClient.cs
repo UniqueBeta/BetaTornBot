@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 namespace BetaTornBot.Shared;
 
 internal readonly record struct WarWindow(long? WarId, long From, long To);
+internal sealed record RankedWarFaction(long Id, string Name);
+internal sealed record RankedWarInfo(long Id, long Start, long End, IReadOnlyList<RankedWarFaction> Factions);
 
 /// <summary>All communication with the Torn API lives here.</summary>
 internal sealed class TornApiClient
@@ -38,6 +40,10 @@ internal sealed class TornApiClient
             throw new TornApiException("Unexpected response from faction/basic (no basic.id).", ex);
         }
     }
+
+
+
+
 
     /// <summary>
     /// GET v2/faction/rankedwars: start/end of the given war, or of the latest finished one when
@@ -112,6 +118,60 @@ internal sealed class TornApiClient
         var war = running[0];
         long start = ReadLong(war, "start") ?? throw new TornApiException("Ranked war has no start time.");
         return new WarWindow(ReadLong(war, "id"), start, now);
+    }
+
+
+    /// <summary>
+    /// GET v2/faction/rankedwars: every ranked war with the names of both factions.
+    /// A war with no end time (or End = 0) is one that hasn't finished.
+    /// </summary>
+    public async Task<List<RankedWarInfo>> GetRankedWarsAsync(CancellationToken ct)
+    {
+        var json = await GetAsync("v2/faction/rankedwars", ct);
+
+        if (json.ValueKind != JsonValueKind.Object ||
+            !json.TryGetProperty("rankedwars", out var items) ||
+            items.ValueKind != JsonValueKind.Array)
+            throw new TornApiException("Unexpected response from faction/rankedwars (no rankedwars array).");
+
+        var wars = new List<RankedWarInfo>();
+        foreach (var war in items.EnumerateArray())
+        {
+            long? id = ReadLong(war, "id");
+            long? start = ReadLong(war, "start");
+            if (id is null || start is null) continue;
+
+            wars.Add(new RankedWarInfo(id.Value, start.Value, ReadLong(war, "end") ?? 0, ReadWarFactions(war)));
+        }
+        return wars;
+    }
+
+    // Accepts the factions as an array of objects with an id, or as an object keyed by faction id.
+    private static List<RankedWarFaction> ReadWarFactions(JsonElement war)
+    {
+        var result = new List<RankedWarFaction>();
+        if (war.ValueKind != JsonValueKind.Object || !war.TryGetProperty("factions", out var factions))
+            return result;
+
+        if (factions.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var f in factions.EnumerateArray())
+            {
+                if (ReadLong(f, "id") is long id)
+                    result.Add(new RankedWarFaction(id, ReadTextProperty(f, "name")));
+            }
+        }
+        else if (factions.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var prop in factions.EnumerateObject())
+            {
+                long? keyAsId = long.TryParse(prop.Name, out var parsed) ? parsed : null;
+                if ((ReadLong(prop.Value, "id") ?? keyAsId) is long id)
+                    result.Add(new RankedWarFaction(id, ReadTextProperty(prop.Value, "name")));
+            }
+        }
+
+        return result;
     }
 
     /// <summary>GET v2/faction/attacks for the window, following the paging links until done.</summary>
@@ -198,4 +258,11 @@ internal sealed class TornApiClient
         v.ValueKind == JsonValueKind.Number
             ? v.GetInt64()
             : null;
+
+    private static string ReadTextProperty(JsonElement e, string name) =>
+        e.ValueKind == JsonValueKind.Object &&
+        e.TryGetProperty(name, out var v) &&
+        v.ValueKind == JsonValueKind.String
+            ? v.GetString() ?? ""
+            : "";
 }

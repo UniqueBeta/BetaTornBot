@@ -1,8 +1,7 @@
-﻿using BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
+﻿using BetaTornBot.Modules.WarModule.WarCalcs.UpcomingTargets;
 using BetaTornBot.Modules.WarModule.WarCalcs.WarPerformance;
 using BetaTornBot.Shared;
-using BetaTornBot.WarCalcs.UpcomingTargets;
-using BetaTornBot.WarCalcs.WarPayCalculator;
+using BetaTornBot.Shared.Formatting;
 using Discord.Interactions;
 using System;
 using System.Collections.Generic;
@@ -21,11 +20,11 @@ namespace BetaTornBot.Modules.WarModule
 
     public class WarPayModule : InteractionModuleBase<SocketInteractionContext>
     {
-
+        private readonly string ApiKey = Environment.GetEnvironmentVariable("ADMIN_KEY")!;
         private static readonly HttpClient SharedHttp = new();
 
         [SlashCommand("warpay", "Gets the warpay formatted for discord")]
-        public async Task GetWarPay([Summary("key", "Must be a full access apiKey")] string ApiKey,
+        public async Task GetWarPay(
         [Summary("cache-value", "Total value of caches in billions. If you want to be more exact remember to use . DOT for decimals")] double totalCacheValue,
         [Summary("output-target", "Whether to output for html or discord")] CommandTarget target,
         [Summary("outside-hit-threshold", "How big the chain needs to be for outside hits to count")] int outsideChainThreshold = 50,
@@ -136,15 +135,14 @@ namespace BetaTornBot.Modules.WarModule
             }
         }
 
-        
-        
+
+
         [SlashCommand("wardefense", "How many times each of our members was hit by the enemy in the current war")]
-        public async Task war_defense(
-             [Summary("key", "Must be a full access apiKey")] string ApiKey)
+        public async Task war_defense([Summary("warId", "Id if the war is not currently ongoing")] long? warId = null)
         {
             await RunDeferredAsync(async () =>
             {
-                var result = await WarDefenseCalculator.CountTimesHitAsync(ApiKey);
+                var result = await WarDefenseCalculator.CountTimesHitAsync(ApiKey, warId);
 
                 foreach (var message in WarDefenseFormatter.ToDiscordMessages(result))
                     await FollowupAsync(message);
@@ -152,12 +150,11 @@ namespace BetaTornBot.Modules.WarModule
         }
 
         [SlashCommand("enemy-respect-earned", "How many times our members were hit in the current war, and the respect the earned from it")]
-        public async Task enemy_respect_earned(
-        [Summary("key", "Must be a full access apiKey")] string ApiKey)
+        public async Task enemy_respect_earned([Summary("warId", "Id if the war is not currently ongoing")] long? warId = null)
         {
             await RunDeferredAsync(async () =>
             {
-                var result = await WarDefenseCalculator.CountTimesHitWithRespectAsync(ApiKey);
+                var result = await WarDefenseCalculator.CountTimesHitWithRespectAsync(ApiKey, warId);
 
                 foreach (var message in RespectEarnedFormatter.ToDiscordMessages(result))
                     await FollowupAsync(message);
@@ -165,18 +162,29 @@ namespace BetaTornBot.Modules.WarModule
         }
 
         [SlashCommand("warperformance", "Per member: respect gained minus respect the enemy gained from hitting them, current war")]
-        public async Task war_performance(
-        [Summary("key", "Must be a full access apiKey")] string ApiKey)
+        public async Task war_performance([Summary("warId", "Id if the war is not currently ongoing")] long? warId = null)
         {
             await RunDeferredAsync(async () =>
             {
-                var result = await WarPerformanceCalculator.CalculatePerformanceAsync(ApiKey);
+                var result = await WarPerformanceCalculator.CalculatePerformanceAsync(ApiKey, warId);
 
                 foreach (var message in WarPerformanceFormatter.ToDiscordMessages(result))
                     await FollowupAsync(message);
             });
         }
 
+        [SlashCommand("formerwars", "Lists former wars as: TheirName vs OurName: war id")]
+        public async Task former_wars(
+        [Summary("count", "How many wars to list, newest first")] int count = 10)
+        {
+            await RunDeferredAsync(async () =>
+            {
+                var wars = await WarListCalculator.GetFormerWarsAsync(ApiKey, count);
+
+                foreach (var message in FormerWarsFormatter.ToDiscordMessages(wars))
+                    await FollowupAsync(message);
+            });
+        }
         // Discord only allows 3 seconds for a first reply and Torn can be slower than that, so every command
         // acknowledges first and then sends its result as a follow-up. Known failures become a short reply.
         private async Task RunDeferredAsync(Func<Task> work)

@@ -10,7 +10,7 @@ namespace BetaTornBot.Shared;
 /// Loading and filtering the attack log of the war that is running right now.
 /// Shared by war defense, respect earned and war performance.
 /// </summary>
-internal static class CurrentWar
+internal static class War
 {
     private static readonly HttpClient Http = new();
 
@@ -29,6 +29,22 @@ internal static class CurrentWar
 
         return (factionId, window, attacks);
     }
+
+    public static async Task<(long FactionId, WarWindow Window, List<Attack> Attacks)> LoadAsync(
+    string apiKey, long id, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new ArgumentException("An API key is required.", nameof(apiKey));
+
+        var api = new TornApiClient(Http, apiKey);
+
+        long factionId = await api.GetFactionIdAsync(ct);
+        WarWindow window = await api.GetWarWindowAsync(id, ct);
+        var attacks = await api.GetAttacksAsync(window.From, window.To, ct);
+
+        return (factionId, window, attacks);
+    }
+
 
     /// <summary>The attacks that count as "a member of ours was hit by the enemy".</summary>
     public static IEnumerable<Attack> HitsTaken(IEnumerable<Attack> attacks, long factionId)

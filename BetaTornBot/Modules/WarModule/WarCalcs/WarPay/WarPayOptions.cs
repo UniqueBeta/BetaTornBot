@@ -1,15 +1,23 @@
-namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
+using System.Collections.Generic;
 
-/// <summary>Internal settings passed from the entry point to the calculation.</summary>
+namespace WarPay;
+
+/// <summary>
+/// Every number that decides how war pay is scored. Change a default here to change the rules for everyone;
+/// the first three can also be set per run from the Discord command.
+/// </summary>
 internal sealed record WarPayOptions
 {
-    /// <summary>
-    /// An assist counts for a hit if it was made on the same target and finished no more than this
-    /// many seconds before the hit started (or overlapped it).
-    /// </summary>
-    public int AssistWindowSeconds { get; init; } = 30;
+    // The chain numbers that give a bonus hit, matching Torn's chain bonuses.
+    private static readonly HashSet<int> DefaultChainBonusMilestones = new()
+    {
+        10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000
+    };
 
-    /// <summary>Every chain-bonus (milestone) hit counts as exactly this much, whatever Torn paid.</summary>
+    /// <summary>A hit made at one of these chain numbers is a bonus hit.</summary>
+    public IReadOnlySet<int> ChainBonusMilestones { get; init; } = DefaultChainBonusMilestones;
+
+    /// <summary>Every bonus hit counts as exactly this much, whatever respect Torn paid for it.</summary>
     public double BonusHitScore { get; init; } = 10;
 
     /// <summary>Score for a successful hit on a player outside the war.</summary>
@@ -17,4 +25,10 @@ internal sealed record WarPayOptions
 
     /// <summary>Outside hits only score while the chain is strictly above this number.</summary>
     public int OutsideChainThreshold { get; init; } = 100;
+
+    /// <summary>
+    /// An assist counts for a hit if it was made on the same target and finished no more than this
+    /// many seconds before the hit started (or overlapped it).
+    /// </summary>
+    public int AssistWindowSeconds { get; init; } = 30;
 }

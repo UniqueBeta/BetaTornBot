@@ -2,41 +2,34 @@ using System.Collections.Generic;
 using System.Linq;
 using BetaTornBot.Shared;
 
-namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
+namespace WarPay;
 
-/// <summary>The calculation itself. Pure: no network, just attacks in and a result out.</summary>
+/// <summary>
+/// The calculation itself, as a short pipeline. Pure: no network and no database, just attacks in and
+/// a result out. Each step is its own class, so a rule change touches one file.
+/// </summary>
 internal static class WarPayEngine
 {
-    public static WarPayResult Run(IEnumerable<Attack> attacks, long factionId, WarPayOptions options, long totalCacheValue)
+    public static WarPayResult Run(IEnumerable<Attack> attacks, long factionId, WarPayOptions options, long payoutPool)
     {
-        var ledger = new ScoreLedger();
-
+        // 1. Keep only the attacks made by our own members.
         var ourAttacks = attacks
-            .Where(a => a.AttackerId is not null && a.AttackerFactionId == factionId);
+            .Where(attack => attack.AttackerId is not null && attack.AttackerFactionId == factionId)
+            .ToList();
 
-        // Assists only matter against the same target, so handle one target at a time.
-        // Attacks with no target id are never matched with each other.
-        foreach (var target in ourAttacks.GroupBy(a => a.DefenderId ?? -a.Id))
-        {
-            var ordered = target.OrderBy(a => a.Started).ThenBy(a => a.Id).ToList();
-            ProcessTarget(ordered, options, ledger);
-        }
+        // 2. Work out what each of our hits is worth (HitScorer.cs).
+        var hits = ourAttacks
+            .Select(attack => HitScorer.Score(attack, options))
+            .OfType<ScoredHit>()
+            .ToList();
 
-        return ledger.Build(totalCacheValue);
-    }
+        // 3. Find the assists that helped each hit (AssistMatcher.cs).
+        var linkedHits = AssistMatcher.Link(ourAttacks, hits, options.AssistWindowSeconds);
 
-    private static void ProcessTarget(IReadOnlyList<Attack> attacksOnTarget, WarPayOptions options, ScoreLedger ledger)
-    {
-        var assists = attacksOnTarget.Where(AssistMatcher.IsAssist).ToList();
-        var claimed = new HashSet<Attack>();
+        // 4. Split each hit between the member who landed it and their assisters (ScoreSplitter.cs).
+        var scoreSheet = ScoreSplitter.Split(linkedHits);
 
-        foreach (var hit in attacksOnTarget.Where(a => !AssistMatcher.IsAssist(a)))
-        {
-            var scored = HitScorer.Score(hit, options);
-            if (scored.Kind == HitKind.None) continue;
-
-            var helpers = AssistMatcher.ClaimHelpers(hit, assists, claimed, options.AssistWindowSeconds);
-            ledger.RecordHit(hit, scored, helpers);
-        }
+        // 5. Add it up per member: scores, shares and payouts (PayoutCalculator.cs).
+        return PayoutCalculator.Build(scoreSheet, payoutPool);
     }
 }

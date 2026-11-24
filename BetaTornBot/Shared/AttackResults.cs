@@ -13,4 +13,8 @@ internal static class AttackResults
     };
 
     public static bool IsSuccessful(Attack a) => !FailedResults.Contains(a.Result ?? "");
+
+    /// <summary>An assist: helped someone else's attack and is not a hit itself.</summary>
+    public static bool IsAssist(Attack a) =>
+        string.Equals(a.Result, "Assist", StringComparison.OrdinalIgnoreCase);
 }

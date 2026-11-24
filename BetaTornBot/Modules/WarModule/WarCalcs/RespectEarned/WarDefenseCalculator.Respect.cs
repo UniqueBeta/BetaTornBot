@@ -20,15 +20,27 @@ public static partial class WarDefenseCalculator
     /// <exception cref="TornApiException">Torn returned an error, or no ranked war is running.</exception>
     public static async Task<WarDefenseRespectResult> CountTimesHitWithRespectAsync(
         string apiKey,
+        long? warId = null,
         CancellationToken cancellationToken = default)
     {
-        var (factionId, window, attacks) = await CurrentWar.LoadAsync(apiKey, cancellationToken);
+        long factionId;
+        WarWindow window;
+        List<Attack> attacks;
+
+        if (warId is long id)
+        {
+            (factionId, window, attacks) = await War.LoadAsync(apiKey, id, cancellationToken);
+        }
+        else
+        {
+            (factionId, window, attacks) = await War.LoadAsync(apiKey, cancellationToken);
+        }
 
         var perPlayer = new Dictionary<long, (string Name, int Count, double Respect)>();
         int total = 0;
         double totalRespect = 0;
 
-        foreach (var a in CurrentWar.HitsTaken(attacks, factionId))
+        foreach (var a in War.HitsTaken(attacks, factionId))
         {
             long defenderId = a.DefenderId!.Value;
             perPlayer.TryGetValue(defenderId, out var entry);
