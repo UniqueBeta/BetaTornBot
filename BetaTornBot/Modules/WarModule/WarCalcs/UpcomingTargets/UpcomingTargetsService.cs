@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace BetaTornBot.WarCalcs.UpcomingTargets;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.UpcomingTargets;
 
 // ---- DTOs matching the Torn API v2 response: GET /v2/faction/{id}/members ----
 // i really need to move this into shared

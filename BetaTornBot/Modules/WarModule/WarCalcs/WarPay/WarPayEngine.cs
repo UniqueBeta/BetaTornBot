@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BetaTornBot.Shared;
 
-namespace WarPay;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
 
 /// <summary>The calculation itself. Pure: no network, just attacks in and a result out.</summary>
 internal static class WarPayEngine

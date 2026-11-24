@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
 using Microsoft.Data.Sqlite;
-using WarPay;
 
 namespace BetaTornBot.Shared;
 

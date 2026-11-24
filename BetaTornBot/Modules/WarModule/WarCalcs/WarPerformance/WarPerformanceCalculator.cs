@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BetaTornBot.Shared;
 
-namespace WarPay;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPerformance;
 
 /// <summary>Entry point for the respect balance of the current war.</summary>
 public static class WarPerformanceCalculator

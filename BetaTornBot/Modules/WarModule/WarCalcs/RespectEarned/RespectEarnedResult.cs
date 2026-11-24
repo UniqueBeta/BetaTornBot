@@ -1,6 +1,7 @@
+using BetaTornBot.Modules.WarModule.WarCalcs.WarDefense;
 using System.Collections.Generic;
 
-namespace WarPay;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.RespectEarned;
 
 /// <summary>Like <see cref="WarDefenseResult"/>, plus the respect the enemy faction earned from those hits.</summary>
 /// <param name="Players">Members who were hit at least once, most hit first.</param>

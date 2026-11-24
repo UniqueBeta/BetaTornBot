@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace WarPay;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
 
 /// <summary>Result of a war pay calculation.</summary>
 /// <param name="Players">Every contributing player, highest score first.</param>

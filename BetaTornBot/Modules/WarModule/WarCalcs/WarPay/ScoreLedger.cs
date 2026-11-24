@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BetaTornBot.Shared;
 
-namespace WarPay;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
 
 /// <summary>Accumulates per-player totals and produces the final result.</summary>
 internal sealed class ScoreLedger

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace WarPay;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.WarDefense;
 
 /// <summary>How many times each member of your faction was hit by the enemy during the war.</summary>
 /// <param name="Players">Members who were hit at least once, most hit first.</param>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BetaTornBot.Modules.WarModule.WarCalcs.WarDefense;
 using BetaTornBot.Shared;
 
 namespace WarPay;

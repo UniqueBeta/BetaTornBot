@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WarPay;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
 
 /// <summary>Front door of the WarPay folder. This is the only method you need to call.</summary>
 public static class WarPayCalculator
@@ -47,7 +47,7 @@ public static class WarPayCalculator
 
     {
 
-        double facPayPercentage = 1 - (factionTake / 100);
+        double facPayPercentage = 1 - factionTake / 100;
         long payoutPool = (long)(totalCacheValue * 1_000_000_000 * facPayPercentage);
 
         if (string.IsNullOrWhiteSpace(apiKey))

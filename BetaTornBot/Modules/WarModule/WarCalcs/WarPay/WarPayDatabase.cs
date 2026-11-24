@@ -2,7 +2,7 @@
 using System.IO;
 using Microsoft.Data.Sqlite;
 
-namespace BetaTornBot.WarCalcs.WarPayCalculator;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
 
 /// <summary>Opens the SQLite file and makes sure the tables exist.</summary>
 internal static class WarPayDatabase

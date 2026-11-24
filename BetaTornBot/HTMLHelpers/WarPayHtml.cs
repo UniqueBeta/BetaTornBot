@@ -1,10 +1,10 @@
-﻿using BetaTornBot.WarCalcs.WarPayCalculator;
+﻿using BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
+using BetaTornBot.WarCalcs.WarPayCalculator;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text;
-using WarPay;
 
 public static class WarPayHtml
 {

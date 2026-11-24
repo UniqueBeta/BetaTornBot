@@ -1,4 +1,6 @@
-﻿using BetaTornBot.Shared;
+﻿using BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
+using BetaTornBot.Modules.WarModule.WarCalcs.WarPerformance;
+using BetaTornBot.Shared;
 using BetaTornBot.WarCalcs.UpcomingTargets;
 using BetaTornBot.WarCalcs.WarPayCalculator;
 using Discord.Interactions;
@@ -9,7 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WarPay;
-namespace BetaTornBot.Modules
+namespace BetaTornBot.Modules.WarModule
 {
     public enum CommandTarget
     {

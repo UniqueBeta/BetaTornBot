@@ -1,4 +1,4 @@
-namespace WarPay;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
 
 /// <summary>Internal settings passed from the entry point to the calculation.</summary>
 internal sealed record WarPayOptions

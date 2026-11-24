@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BetaTornBot.Shared;
 
-namespace WarPay;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
 
 /// <summary>Finds which assists belong to which hit.</summary>
 internal static class AssistMatcher

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using BetaTornBot.Shared;
 
-namespace WarPay;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPay;
 
 internal enum HitKind { None, War, Bonus, Outside }
 

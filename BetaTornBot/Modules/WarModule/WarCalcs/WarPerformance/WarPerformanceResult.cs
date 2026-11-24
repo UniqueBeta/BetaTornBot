@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace WarPay;
+namespace BetaTornBot.Modules.WarModule.WarCalcs.WarPerformance;
 
 /// <summary>How each member, and the faction as a whole, is doing in the current war, measured in respect.</summary>
 /// <param name="Players">Every member who landed or took at least one war hit, best performance first.</param>
