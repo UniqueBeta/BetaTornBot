@@ -30,7 +30,8 @@ namespace BetaTornBot.Modules.WarModule
         [Summary("outside-hit-threshold", "How big the chain needs to be for outside hits to count")] int outsideChainThreshold = 50,
         [Summary("outside-hit-score", "Score given for an outside hit above threshold")] double outsideHitScore = 3,
         [Summary("bonus-hit-score", "score given for a bonus(10, 25, 50...)")] double bonusHitScore = 10,
-        [Summary("faction-take", "Percentage of war pay that goes to the faction in percentage (20 = 20%)")] double factionTake = 20)
+        [Summary("faction-take", "Percentage of war pay that goes to the faction in percentage (20 = 20%)")] double factionTake = 20,
+        [Summary("assist-window", "Number of seconds before the hit started (or 0 for only overlapping")] int assistWindowSeconds = 10)
         {
             // Discord only allows 3 seconds for the first reply, and fetching a war from Torn can take longer.
             // Acknowledge now, then send the table with FollowupAsync once it is ready.
@@ -44,7 +45,9 @@ namespace BetaTornBot.Modules.WarModule
                     bonusHitScore,
                     ApiKey,
                     totalCacheValue,
-                    factionTake);
+                    factionTake,
+                    assistWindowSeconds
+                    );
 
                 if (target == CommandTarget.Discord)
                 {
@@ -82,7 +85,7 @@ namespace BetaTornBot.Modules.WarModule
             }
         }
 
-
+        //this still needs to be moved to its own formatter, i should make pete do that as a learning experience
         [SlashCommand("get-upcoming", "gets upcoming targets for war")]
         public async Task GetUpcomingWarTargets([Summary("OutputTarget", "target destination for output")]CommandTarget target, [Summary("limit", "how many targets should be shown")]int limit = 10)
         {

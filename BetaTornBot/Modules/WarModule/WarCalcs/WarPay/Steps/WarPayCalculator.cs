@@ -46,6 +46,7 @@ public static class WarPayCalculator
         string apiKey,
         double totalCacheValue,
         double factionTake,
+        int assistWindowSeconds,
         string databasePath = DefaultDatabasePath,
         CancellationToken cancellationToken = default)
     {
@@ -58,6 +59,7 @@ public static class WarPayCalculator
             OutsideChainThreshold = outsideChainThreshold,
             OutsideHitScore = outsideHitScore,
             BonusHitScore = bonusHitScore,
+            AssistWindowSeconds = assistWindowSeconds,
         };
         var settings = ToSettings(options, payoutPool);
 

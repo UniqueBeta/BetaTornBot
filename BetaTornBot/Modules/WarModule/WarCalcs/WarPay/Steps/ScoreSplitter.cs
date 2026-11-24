@@ -16,12 +16,7 @@ internal static class ScoreSplitter
     private static IEnumerable<ScoreEntry> SplitOne(LinkedHit linked)
     {
         var hit = linked.Hit;
-
-        int people = 1 + linked.Helpers.Count;
-        bool isShared = people > 1;
-
         // To change how a hit is divided (say 70% hitter, 30% assisters), this is the line to change.
-        double amountEach = hit.Value / people;
 
         yield return new ScoreEntry(
             PlayerId: hit.Attack.AttackerId!.Value,
@@ -29,8 +24,8 @@ internal static class ScoreSplitter
             Role: EntryRole.Hitter,
             Kind: hit.Kind,
             HitValue: hit.Value,
-            Amount: amountEach,
-            IsShared: isShared);
+            Amount: hit.Attack.RespectGain,
+            IsShared: true);
 
         foreach (var helper in linked.Helpers)
         {
@@ -40,7 +35,7 @@ internal static class ScoreSplitter
                 Role: EntryRole.Assister,
                 Kind: hit.Kind,
                 HitValue: hit.Value,
-                Amount: amountEach,
+                Amount: hit.Attack.RespectGain / 2,
                 IsShared: true);
         }
     }

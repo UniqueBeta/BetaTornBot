@@ -30,5 +30,6 @@ internal sealed record WarPayOptions
     /// An assist counts for a hit if it was made on the same target and finished no more than this
     /// many seconds before the hit started (or overlapped it).
     /// </summary>
-    public int AssistWindowSeconds { get; init; } = 30;
+    //change this so 0 means only hits that overlap
+    public int AssistWindowSeconds { get; init; } = 10;
 }

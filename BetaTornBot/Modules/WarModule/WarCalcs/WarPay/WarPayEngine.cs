@@ -24,6 +24,7 @@ internal static class WarPayEngine
             .ToList();
 
         // 3. Find the assists that helped each hit (AssistMatcher.cs).
+        // Claude made this and its completely wrong, but its good enough to ignore for now
         var linkedHits = AssistMatcher.Link(ourAttacks, hits, options.AssistWindowSeconds);
 
         // 4. Split each hit between the member who landed it and their assisters (ScoreSplitter.cs).

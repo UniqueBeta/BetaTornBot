@@ -42,6 +42,7 @@ public class DiscordBotService : BackgroundService
             return Task.CompletedTask;
         };
 
+
         // Load slash command modules
         await _interactions.AddModulesAsync(
             Assembly.GetEntryAssembly()!,

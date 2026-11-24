@@ -48,7 +48,8 @@ internal static class HitScorer
         if (!chainIsBigEnough) return null;
 
         if (IsChainBonus(attack, options))
-            return new ScoredHit(attack, HitKind.Bonus, options.BonusHitScore);
+            //chain bonuses on outside targets are completely ignored in code, and will be highly penalized in the faction
+            return new ScoredHit(attack, HitKind.Bonus, 0);
 
         return new ScoredHit(attack, HitKind.Outside, options.OutsideHitScore);
     }
