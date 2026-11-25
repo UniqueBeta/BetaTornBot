@@ -16,27 +16,33 @@ internal static class AssistMatcher
     /// <param name="hits">The hits that score.</param>
     /// <param name="windowSeconds">How long before a hit an assist may have finished.</param>
     public static List<LinkedHit> Link(
-        IReadOnlyList<Attack> ourAttacks,
-        IReadOnlyList<ScoredHit> hits,
-        int windowSeconds)
+    IReadOnlyList<Attack> ourAttacks,
+    IReadOnlyList<ScoredHit> hits,
+    int windowSeconds,
+    long factionId)
     {
         var assistsByTarget = ourAttacks
             .Where(AttackResults.IsAssist)
             .ToLookup(TargetOf);
 
-        // An assist only ever helps one hit, so remember which ones are taken.
         var alreadyUsed = new HashSet<Attack>();
 
         var linked = new List<LinkedHit>();
         foreach (var hit in hits.OrderBy(h => h.Attack.Started).ThenBy(h => h.Attack.Id))
         {
+            // A hit on one of our own members can never be assisted.
+            if (hit.Attack.DefenderFactionId == factionId)
+            {
+                linked.Add(new LinkedHit(hit, Array.Empty<Attack>()));
+                continue;
+            }
+
             var assistsOnSameTarget = assistsByTarget[TargetOf(hit.Attack)];
             var helpers = TakeHelpers(hit, assistsOnSameTarget, alreadyUsed, windowSeconds);
             linked.Add(new LinkedHit(hit, helpers));
         }
         return linked;
     }
-
     // The assists that helped this hit, one per member, marked as used so no other hit can claim them.
     private static IReadOnlyList<Attack> TakeHelpers(
         ScoredHit hit,

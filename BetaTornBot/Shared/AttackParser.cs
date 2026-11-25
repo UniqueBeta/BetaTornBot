@@ -35,7 +35,8 @@ internal static class AttackParser
             RespectGain: Dbl(el, "respect_gain") ?? Dbl(el, "respect") ?? 0,
             Chain: (int)(Int(el, "chain") ?? 0),
             IsRankedWar: IsRankedWar(el),
-            DefenderName: defenderName);
+            DefenderName: defenderName,
+            DefenderFactionId: Int(Obj(defender, "faction"), "id") ?? Int(el, "defender_faction")); ;
     }
 
     private static bool IsRankedWar(JsonElement el)

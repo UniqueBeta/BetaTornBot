@@ -13,4 +13,5 @@ internal sealed record Attack(
     double RespectGain,
     int Chain,
     bool IsRankedWar,
-    string DefenderName = "");
+    string DefenderName = "",
+    long? DefenderFactionId = null);

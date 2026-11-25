@@ -31,7 +31,8 @@ namespace BetaTornBot.Modules.WarModule
         [Summary("outside-hit-score", "Score given for an outside hit above threshold")] double outsideHitScore = 3,
         [Summary("bonus-hit-score", "score given for a bonus(10, 25, 50...)")] double bonusHitScore = 10,
         [Summary("faction-take", "Percentage of war pay that goes to the faction in percentage (20 = 20%)")] double factionTake = 20,
-        [Summary("assist-window", "Number of seconds before the hit started (or 0 for only overlapping")] int assistWindowSeconds = 10)
+        [Summary("assist-window", "Number of seconds before the hit started (or 0 for only overlapping")] int assistWindowSeconds = 10,
+        [Summary("hospital-bonus", "Extra score for a hit that hospitalised the target (0 = off)")] double hospitalBonusScore = 0)
         {
             // Discord only allows 3 seconds for the first reply, and fetching a war from Torn can take longer.
             // Acknowledge now, then send the table with FollowupAsync once it is ready.
@@ -46,7 +47,8 @@ namespace BetaTornBot.Modules.WarModule
                     ApiKey,
                     totalCacheValue,
                     factionTake,
-                    assistWindowSeconds
+                    assistWindowSeconds,
+                    hospitalBonusScore
                     );
 
                 if (target == CommandTarget.Discord)

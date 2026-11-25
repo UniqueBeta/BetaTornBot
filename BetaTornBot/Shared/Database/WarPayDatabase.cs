@@ -98,6 +98,7 @@ CREATE INDEX IF NOT EXISTS idx_wars_start ON wars(start_time);
             // Database files created by an earlier version don't have the newer columns yet.
             EnsureColumn(connection, "wars", "has_defender_info", "INTEGER NOT NULL DEFAULT 0");
             EnsureColumn(connection, "attacks", "defender_name", "TEXT NOT NULL DEFAULT ''");
+            EnsureColumn(connection, "attacks", "defender_faction_id", "INTEGER");
             return connection;
         }
         catch

@@ -25,12 +25,16 @@ internal static class WarPayEngine
 
         // 3. Find the assists that helped each hit (AssistMatcher.cs).
         // Claude made this and its completely wrong, but its good enough to ignore for now
-        var linkedHits = AssistMatcher.Link(ourAttacks, hits, options.AssistWindowSeconds);
+        var linkedHits = AssistMatcher.Link(ourAttacks, hits, options.AssistWindowSeconds, factionId);
 
         // 4. Split each hit between the member who landed it and their assisters (ScoreSplitter.cs).
         var scoreSheet = ScoreSplitter.Split(linkedHits);
 
-        // 5. Add it up per member: scores, shares and payouts (PayoutCalculator.cs).
+
+        // 5. Add score for hospitalising a fellow faction member (HospitalBonus.cs). This is a flat bonus, not a share.
+        scoreSheet.AddRange(HospitalBonus.Entries(ourAttacks, factionId, options.HospitalBonusScore));
+
+        // 6. Add it up per member: scores, shares and payouts (PayoutCalculator.cs).
         return PayoutCalculator.Build(scoreSheet, payoutPool);
     }
 }

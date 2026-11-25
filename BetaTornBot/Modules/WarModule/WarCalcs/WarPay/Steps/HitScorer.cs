@@ -13,6 +13,9 @@ internal enum HitKind
 
     /// <summary>A hit outside the war made while the chain was big enough, worth a flat amount.</summary>
     Outside,
+
+    /// <summary>A flat extra for hospitalising a fellow faction member.</summary>
+    Hospital,
 }
 
 /// <summary>A hit of ours that is worth points, before any splitting with assisters.</summary>

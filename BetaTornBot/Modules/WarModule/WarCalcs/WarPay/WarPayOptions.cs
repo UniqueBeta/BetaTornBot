@@ -26,6 +26,9 @@ internal sealed record WarPayOptions
     /// <summary>Outside hits only score while the chain is strictly above this number.</summary>
     public int OutsideChainThreshold { get; init; } = 100;
 
+    /// <summary>Extra score for a scoring hit that hospitalised a member of our faction. 0 turns it off.</summary>
+    public double HospitalBonusScore { get; init; } = 0;
+
     /// <summary>
     /// An assist counts for a hit if it was made on the same target and finished no more than this
     /// many seconds before the hit started (or overlapped it).

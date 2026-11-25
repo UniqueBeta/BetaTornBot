@@ -47,6 +47,7 @@ public static class WarPayCalculator
         double totalCacheValue,
         double factionTake,
         int assistWindowSeconds,
+        double hospitalBonusScore,
         string databasePath = DefaultDatabasePath,
         CancellationToken cancellationToken = default)
     {
@@ -60,6 +61,7 @@ public static class WarPayCalculator
             OutsideHitScore = outsideHitScore,
             BonusHitScore = bonusHitScore,
             AssistWindowSeconds = assistWindowSeconds,
+            HospitalBonusScore = hospitalBonusScore,
         };
         var settings = ToSettings(options, payoutPool);
 
@@ -73,7 +75,10 @@ public static class WarPayCalculator
 
         // 2. Already calculated with exactly these settings? Then there is nothing to do.
         var saved = store.TryLoadResult(warId, factionId, settings);
-        if (saved is not null) return saved;
+        if (saved is not null) {
+            Console.WriteLine("WTF????????");
+            return saved;
+        }
 
         // 3. Get the attack log: from the database if it was saved earlier, otherwise from Torn.
         var attacks = await LoadAttacksAsync(api, store, factionId, warId, war, cancellationToken);

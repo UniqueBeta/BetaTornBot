@@ -115,7 +115,7 @@ ORDER BY share_percent DESC, player_id";
             check.CommandText = "SELECT has_defender_info FROM wars WHERE id = $id AND faction_id = $faction";
             check.Parameters.AddWithValue("$id", warId);
             check.Parameters.AddWithValue("$faction", factionId);
-            if (check.ExecuteScalar() is not long hasDefenderInfo || hasDefenderInfo == 0) return null;
+            if (check.ExecuteScalar() is not long hasDefenderInfo || hasDefenderInfo < 2) return null; 
         }
 
         var attacks = new List<Attack>();
@@ -142,7 +142,8 @@ WHERE war_id = $id";
                 RespectGain: reader.GetDouble(8),
                 Chain: (int)reader.GetInt64(9),
                 IsRankedWar: reader.GetInt64(10) != 0,
-                DefenderName: reader.GetString(11)));
+                DefenderName: reader.GetString(11),
+                DefenderFactionId: ReadNullableLong(reader, 12)));
         }
         return attacks;
     }
@@ -164,13 +165,13 @@ WHERE war_id = $id";
 
         using (var cmd = Command(conn, tx, @"
 INSERT INTO wars (id, faction_id, start_time, end_time, attack_count, has_defender_info)
-VALUES ($id, $faction, $from, $to, $count, 1)
+VALUES ($id, $faction, $from, $to, $count, 2)
 ON CONFLICT(id) DO UPDATE SET
     faction_id = excluded.faction_id,
     start_time = excluded.start_time,
     end_time = excluded.end_time,
     attack_count = excluded.attack_count,
-    has_defender_info = 1"))
+    has_defender_info = 2"))
         {
             cmd.Parameters.AddWithValue("$id", warId);
             cmd.Parameters.AddWithValue("$faction", factionId);
@@ -189,10 +190,10 @@ ON CONFLICT(id) DO UPDATE SET
         using (var cmd = Command(conn, tx, @"
 INSERT OR REPLACE INTO attacks
     (war_id, id, started, ended, attacker_id, attacker_name, attacker_faction_id,
-     defender_id, result, respect_gain, chain, is_ranked_war, defender_name)
+     defender_id, result, respect_gain, chain, is_ranked_war, defender_name, defender_faction_id)
 VALUES
     ($war, $id, $started, $ended, $attacker, $attackerName, $attackerFaction,
-     $defender, $result, $respect, $chain, $ranked, $defenderName)"))
+     $defender, $result, $respect, $chain, $ranked, $defenderName, $defenderFaction)"))
         {
             var pWar = cmd.Parameters.Add("$war", SqliteType.Integer);
             var pId = cmd.Parameters.Add("$id", SqliteType.Integer);
@@ -207,6 +208,7 @@ VALUES
             var pChain = cmd.Parameters.Add("$chain", SqliteType.Integer);
             var pRanked = cmd.Parameters.Add("$ranked", SqliteType.Integer);
             var pDefenderName = cmd.Parameters.Add("$defenderName", SqliteType.Text);
+            var pDefenderFaction = cmd.Parameters.Add("$defenderFaction", SqliteType.Integer);
 
             foreach (var a in attacks)
             {
@@ -223,6 +225,7 @@ VALUES
                 pChain.Value = a.Chain;
                 pRanked.Value = a.IsRankedWar ? 1 : 0;
                 pDefenderName.Value = a.DefenderName ?? "";
+                pDefenderFaction.Value = ToDb(a.DefenderFactionId);
                 cmd.ExecuteNonQuery();
             }
         }
