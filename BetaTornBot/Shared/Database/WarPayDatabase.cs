@@ -100,6 +100,8 @@ CREATE INDEX IF NOT EXISTS idx_wars_start ON wars(start_time);
             EnsureColumn(connection, "attacks", "defender_name", "TEXT NOT NULL DEFAULT ''");
             EnsureColumn(connection, "attacks", "defender_faction_id", "INTEGER");
             EnsureColumn(connection, "war_results", "hospital_bonus_score", "REAL NOT NULL DEFAULT 0");
+            EnsureColumn(connection, "war_results", "assist_score_fraction", "REAL NOT NULL DEFAULT 0");
+            EnsureColumn(connection, "war_players", "hospital_hits", "INTEGER NOT NULL DEFAULT 0");
             return connection;
         }
         catch

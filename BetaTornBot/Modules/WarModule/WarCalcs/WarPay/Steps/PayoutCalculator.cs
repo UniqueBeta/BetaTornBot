@@ -44,6 +44,7 @@ internal static class PayoutCalculator
             OutsideHits = hitterEntries.Count(entry => entry.Kind == HitKind.Outside),
             SharedHits = hitterEntries.Count(entry => entry.IsShared),
             AssistHits = assisterEntries.Count,
+            HospitalHits = hitterEntries.Count(entry => entry.Kind == HitKind.Hospital),
 
             UnsplitScore = WarPayMath.RoundDown(hitterEntries.Sum(entry => entry.HitValue)),
             Score = WarPayMath.RoundDown(total.Score),

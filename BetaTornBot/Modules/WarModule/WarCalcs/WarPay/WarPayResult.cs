@@ -54,4 +54,8 @@ public sealed class PlayerWarPay
     /// scores, so it is not affected by the rounding above.
     /// </summary>
     public double SharePercent { get; init; }
+
+
+    /// <summary>Fellow faction members this player hospitalised.</summary>
+    public int HospitalHits { get; init; }
 }

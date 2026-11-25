@@ -13,8 +13,6 @@ internal static class HospitalBonus
 {
     public static IEnumerable<ScoreEntry> Entries(IReadOnlyList<Attack> ourAttacks, long factionId, double bonusScore)
     {
-        if (bonusScore <= 0) return Enumerable.Empty<ScoreEntry>();
-
         return ourAttacks
             .Where(attack => IsHospitalised(attack)
                              && attack.AttackerFactionId == factionId

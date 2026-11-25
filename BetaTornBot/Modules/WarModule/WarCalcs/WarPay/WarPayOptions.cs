@@ -35,4 +35,11 @@ internal sealed record WarPayOptions
     /// </summary>
     //change this so 0 means only hits that overlap
     public int AssistWindowSeconds { get; init; } = 10;
+
+    /// <summary>
+    /// The fraction of a hit's an assister gets. 0.5 means an assister gets half of the score hit for
+    /// this score is NOT deducted from the original hit
+    /// if the value is above 1 the assister will instead be granted a static amount of score equal to the value of this property
+    // / </summary>
+    public double AssistScoreFraction { get; init; } = 0.5;
 }

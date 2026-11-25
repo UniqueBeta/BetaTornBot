@@ -1,19 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using Discord;
+using System.Collections.Generic;
 
 namespace WarPay;
 
 /// <summary>Step 4: divides each hit between the member who landed it and the members who assisted.</summary>
 internal static class ScoreSplitter
 {
-    public static List<ScoreEntry> Split(IEnumerable<LinkedHit> linkedHits)
+    public static List<ScoreEntry> Split(IEnumerable<LinkedHit> linkedHits, double assistScoreFraction)
     {
         var entries = new List<ScoreEntry>();
         foreach (var linked in linkedHits)
-            entries.AddRange(SplitOne(linked));
+            entries.AddRange(SplitOne(linked, assistScoreFraction));
         return entries;
     }
 
-    private static IEnumerable<ScoreEntry> SplitOne(LinkedHit linked)
+    private static IEnumerable<ScoreEntry> SplitOne(LinkedHit linked, double assistScoreFraction)
     {
         var hit = linked.Hit;
 
@@ -27,16 +28,29 @@ internal static class ScoreSplitter
             Amount: hit.Value,
             IsShared: linked.Helpers.Count > 0);
 
-        foreach (var helper in linked.Helpers)
+        double true_value = 0;
+        if (assistScoreFraction > 1)
         {
-            yield return new ScoreEntry(
-                PlayerId: helper.AttackerId!.Value,
-                Name: helper.AttackerName,
-                Role: EntryRole.Assister,
-                Kind: hit.Kind,
-                HitValue: hit.Value,
-                Amount: hit.Value / 2,
-                IsShared: true);
+            true_value = assistScoreFraction; //give static score instead of fraction
+            //give static score instead of fraction
         }
+        else
+        {
+            true_value = hit.Value * assistScoreFraction; //give fraction of hit value
+        }
+
+            foreach (var helper in linked.Helpers)
+            {
+
+
+                yield return new ScoreEntry(
+                    PlayerId: helper.AttackerId!.Value,
+                    Name: helper.AttackerName,
+                    Role: EntryRole.Assister,
+                    Kind: hit.Kind,
+                    HitValue: hit.Value,
+                    Amount: true_value,
+                    IsShared: true);
+            }
     }
 }

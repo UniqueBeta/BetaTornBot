@@ -43,6 +43,7 @@ public static class WarPayFormatter
             columns.Add(Count("Bonus", p => p.BonusHits, result));
             columns.Add(Count("Out", p => p.OutsideHits, result));
             columns.Add(Count("Asst", p => p.AssistHits, result));
+            columns.Add(Count("Hosp", p => p.HospitalHits, result));
         }
 
         columns.Add(new("Score", Align.Right,

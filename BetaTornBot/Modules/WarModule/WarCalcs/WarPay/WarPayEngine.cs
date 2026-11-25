@@ -28,7 +28,7 @@ internal static class WarPayEngine
         var linkedHits = AssistMatcher.Link(ourAttacks, hits, options.AssistWindowSeconds, factionId);
 
         // 4. Split each hit between the member who landed it and their assisters (ScoreSplitter.cs).
-        var scoreSheet = ScoreSplitter.Split(linkedHits);
+        var scoreSheet = ScoreSplitter.Split(linkedHits, options.AssistScoreFraction);
 
 
         // 5. Add score for hospitalising a fellow faction member (HospitalBonus.cs). This is a flat bonus, not a share.

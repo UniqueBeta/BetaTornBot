@@ -48,6 +48,7 @@ public static class WarPayCalculator
         double factionTake,
         int assistWindowSeconds,
         double hospitalBonusScore,
+        double assistScoreFraction,
         string databasePath = DefaultDatabasePath,
         CancellationToken cancellationToken = default)
     {
@@ -62,6 +63,7 @@ public static class WarPayCalculator
             BonusHitScore = bonusHitScore,
             AssistWindowSeconds = assistWindowSeconds,
             HospitalBonusScore = hospitalBonusScore,
+            AssistScoreFraction = assistScoreFraction
         };
         var settings = ToSettings(options, payoutPool);
 
@@ -125,7 +127,8 @@ public static class WarPayCalculator
             options.BonusHitScore,
             options.AssistWindowSeconds,
             payoutPool,
-            options.HospitalBonusScore);
+            options.HospitalBonusScore,
+            options.AssistScoreFraction);
 
     // The attack log of a war: the saved copy if there is one, otherwise from Torn (and then saved).
     private static async Task<List<Attack>> LoadAttacksAsync(
