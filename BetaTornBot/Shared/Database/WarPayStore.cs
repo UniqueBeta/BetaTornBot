@@ -12,7 +12,8 @@ internal sealed record WarSettings(
     double OutsideHitScore,
     double BonusHitScore,
     int AssistWindowSeconds,
-    long TotalCacheValue);
+    long TotalCacheValue,
+    double HospitalBonusScore);
 
 /// <summary>Saves and loads wars, attacks and results. All the write/read SQL lives here.</summary>
 internal sealed class WarPayStore
@@ -39,7 +40,8 @@ internal sealed class WarPayStore
             cmd.CommandText = @"
 SELECT w.start_time, w.end_time, w.attack_count,
        r.outside_chain_threshold, r.outside_hit_score, r.bonus_hit_score,
-       r.assist_window_seconds, r.total_cache_value, r.total_score
+       r.assist_window_seconds, r.total_cache_value, r.total_score,
+       r.hospital_bonus_score
 FROM wars w
 JOIN war_results r ON r.war_id = w.id
 WHERE w.id = $id AND w.faction_id = $faction";
@@ -57,7 +59,8 @@ WHERE w.id = $id AND w.faction_id = $faction";
                 OutsideHitScore: reader.GetDouble(4),
                 BonusHitScore: reader.GetDouble(5),
                 AssistWindowSeconds: (int)reader.GetInt64(6),
-                TotalCacheValue: reader.GetInt64(7));
+                TotalCacheValue: reader.GetInt64(7),
+                HospitalBonusScore: reader.GetDouble(9));
             totalScore = reader.GetInt64(8);
         }
 
@@ -121,10 +124,11 @@ ORDER BY share_percent DESC, player_id";
         var attacks = new List<Attack>();
         using var cmd = conn.CreateCommand();
         cmd.CommandText = @"
-SELECT id, started, ended, attacker_id, attacker_name, attacker_faction_id,
-       defender_id, result, respect_gain, chain, is_ranked_war, defender_name
-FROM attacks
-WHERE war_id = $id";
+        SELECT id, started, ended, attacker_id, attacker_name, attacker_faction_id,
+               defender_id, result, respect_gain, chain, is_ranked_war, defender_name,
+               defender_faction_id
+        FROM attacks
+        WHERE war_id = $id";
         cmd.Parameters.AddWithValue("$id", warId);
 
         using var reader = cmd.ExecuteReader();
@@ -248,9 +252,9 @@ VALUES
         using (var cmd = Command(conn, tx, @"
 INSERT OR REPLACE INTO war_results
     (war_id, outside_chain_threshold, outside_hit_score, bonus_hit_score,
-     assist_window_seconds, total_cache_value, total_score, calculated_at)
+     assist_window_seconds, total_cache_value, total_score, calculated_at, hospital_bonus_score)
 VALUES
-    ($id, $threshold, $outside, $bonus, $assistWindow, $cache, $total, $now)"))
+    ($id, $threshold, $outside, $bonus, $assistWindow, $cache, $total, $now, $hospital)"))
         {
             cmd.Parameters.AddWithValue("$id", warId);
             cmd.Parameters.AddWithValue("$threshold", settings.OutsideChainThreshold);
@@ -260,6 +264,7 @@ VALUES
             cmd.Parameters.AddWithValue("$cache", settings.TotalCacheValue);
             cmd.Parameters.AddWithValue("$total", result.TotalScore);
             cmd.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+            cmd.Parameters.AddWithValue("$hospital", settings.HospitalBonusScore);
             cmd.ExecuteNonQuery();
         }
 

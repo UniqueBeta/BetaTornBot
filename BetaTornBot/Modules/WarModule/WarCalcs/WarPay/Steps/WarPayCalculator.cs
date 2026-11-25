@@ -124,7 +124,8 @@ public static class WarPayCalculator
             options.OutsideHitScore,
             options.BonusHitScore,
             options.AssistWindowSeconds,
-            payoutPool);
+            payoutPool,
+            options.HospitalBonusScore);
 
     // The attack log of a war: the saved copy if there is one, otherwise from Torn (and then saved).
     private static async Task<List<Attack>> LoadAttacksAsync(
