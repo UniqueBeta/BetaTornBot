@@ -91,54 +91,25 @@ namespace BetaTornBot.Modules.WarModule
 
         //this still needs to be moved to its own formatter, i should make pete do that as a learning experience
         [SlashCommand("get-upcoming", "gets upcoming targets for war")]
-        public async Task GetUpcomingWarTargets([Summary("OutputTarget", "target destination for output")]CommandTarget target, [Summary("limit", "how many targets should be shown")]int limit = 10)
+        public async Task GetUpcomingWarTargets(
+        [Summary("OutputTarget", "target destination for output")] CommandTarget target,
+        [Summary("limit", "how many targets should be shown")] int limit = 10)
         {
             await DeferAsync();
             try
             {
                 var service = new TornFactionService(new HttpClient(), Environment.GetEnvironmentVariable("PUBLIC_TORN_TOKEN"));
-                List<string> lines;
-                StringBuilder sb = new StringBuilder();
-                if (target == CommandTarget.Discord)
-                {
-                    Console.WriteLine("Getting targets as discord");
-                    lines = await service.GetEnemyMembersByTimeOkayAsDiscordMemberAsync();
-                }
-                else
-                {
-                    Console.WriteLine("Getting targets as html");
-                    lines = await service.GetEnemyMembersByTimeUntilOkAsHtmlAsync();
-                }
 
+                var lines = target == CommandTarget.Discord
+                    ? await service.GetEnemyMembersByTimeOkayAsDiscordMemberAsync()
+                    : await service.GetEnemyMembersByTimeUntilOkAsHtmlAsync();
 
-
-
-                //all these reversals need to be fixed, but fixing the fuckup causing them seems like work
-                if (limit < lines.Count)
-                {
-                    var newL = lines.Slice(0, limit);
-                    newL.Reverse();
-                    foreach (var line in newL)
-                    {
-                        //this works
-                        sb.AppendLine(line);
-                    }
-                }
-                else
-                {
-                    lines.Reverse();
-                    foreach (var line in lines)
-                    {
-                        //this works
-                        sb.AppendLine(line);
-                    }
-                }
-
-                await FollowupAsync(sb.ToString());
+                foreach (var message in UpcomingTargetsFormatter.ToMessages(lines, limit))
+                    await FollowupAsync(message);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                await FollowupAsync($"Beta fucked this up: " + ex.Message);
+                await FollowupAsync("Beta fucked this up: " + ex.Message);
             }
         }
 
