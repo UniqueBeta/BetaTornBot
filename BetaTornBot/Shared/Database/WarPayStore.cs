@@ -14,7 +14,9 @@ internal sealed record WarSettings(
     int AssistWindowSeconds,
     long TotalCacheValue,
     double HospitalBonusScore,
-    double AssistScoreFraction);
+    double AssistScoreFraction,
+    double OutsideChainSavingHitScore,
+    int OutsideChainSavingSecondsLeft);
 
 /// <summary>Saves and loads wars, attacks and results. All the write/read SQL lives here.</summary>
 internal sealed class WarPayStore
@@ -42,7 +44,8 @@ internal sealed class WarPayStore
 SELECT w.start_time, w.end_time, w.attack_count,
        r.outside_chain_threshold, r.outside_hit_score, r.bonus_hit_score,
        r.assist_window_seconds, r.total_cache_value, r.total_score,
-       r.hospital_bonus_score, r.assist_score_fraction
+       r.hospital_bonus_score, r.assist_score_fraction,
+       r.outside_chain_saving_hit_score, r.outside_chain_saving_seconds_left
 FROM wars w
 JOIN war_results r ON r.war_id = w.id
 WHERE w.id = $id AND w.faction_id = $faction";
@@ -62,7 +65,9 @@ WHERE w.id = $id AND w.faction_id = $faction";
                 AssistWindowSeconds: (int)reader.GetInt64(6),
                 TotalCacheValue: reader.GetInt64(7),
                 HospitalBonusScore: reader.GetDouble(9),
-                AssistScoreFraction: reader.GetDouble(10));
+                AssistScoreFraction: reader.GetDouble(10),
+                OutsideChainSavingHitScore: reader.GetDouble(11),
+                OutsideChainSavingSecondsLeft: (int)reader.GetInt64(12));
             totalScore = reader.GetInt64(8);
         }
 
@@ -74,7 +79,7 @@ WHERE w.id = $id AND w.faction_id = $faction";
             cmd.CommandText = @"
 SELECT player_id, name, share_percent, score, unsplit_score,
        war_hits, bonus_hits, outside_hits, shared_hits, assist_hits, payout,
-       hospital_hits
+       hospital_hits, chain_saving_hits
 FROM war_players
 WHERE war_id = $id
 ORDER BY share_percent DESC, player_id";
@@ -97,6 +102,7 @@ ORDER BY share_percent DESC, player_id";
                     AssistHits = (int)reader.GetInt64(9),
                     Payout = reader.GetInt64(10),
                     HospitalHits = (int)reader.GetInt64(11),
+                    ChainSavingHits = (int)reader.GetInt64(12),
                 });
             }
         }
@@ -122,7 +128,7 @@ ORDER BY share_percent DESC, player_id";
             check.CommandText = "SELECT has_defender_info FROM wars WHERE id = $id AND faction_id = $faction";
             check.Parameters.AddWithValue("$id", warId);
             check.Parameters.AddWithValue("$faction", factionId);
-            if (check.ExecuteScalar() is not long hasDefenderInfo || hasDefenderInfo < 2) return null; 
+            if (check.ExecuteScalar() is not long hasDefenderInfo || hasDefenderInfo < 2) return null;
         }
 
         var attacks = new List<Attack>();
@@ -256,9 +262,11 @@ VALUES
         using (var cmd = Command(conn, tx, @"
 INSERT OR REPLACE INTO war_results
     (war_id, outside_chain_threshold, outside_hit_score, bonus_hit_score,
-     assist_window_seconds, total_cache_value, total_score, calculated_at, hospital_bonus_score, assist_score_fraction)
+     assist_window_seconds, total_cache_value, total_score, calculated_at, hospital_bonus_score, assist_score_fraction,
+     outside_chain_saving_hit_score, outside_chain_saving_seconds_left)
 VALUES
-    ($id, $threshold, $outside, $bonus, $assistWindow, $cache, $total, $now, $hospital, $assistFraction)"))
+    ($id, $threshold, $outside, $bonus, $assistWindow, $cache, $total, $now, $hospital, $assistFraction,
+     $chainSavingScore, $chainSavingSeconds)"))
         {
             cmd.Parameters.AddWithValue("$id", warId);
             cmd.Parameters.AddWithValue("$threshold", settings.OutsideChainThreshold);
@@ -270,16 +278,20 @@ VALUES
             cmd.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
             cmd.Parameters.AddWithValue("$hospital", settings.HospitalBonusScore);
             cmd.Parameters.AddWithValue("$assistFraction", settings.AssistScoreFraction);
+            cmd.Parameters.AddWithValue("$chainSavingScore", settings.OutsideChainSavingHitScore);
+            cmd.Parameters.AddWithValue("$chainSavingSeconds", settings.OutsideChainSavingSecondsLeft);
             cmd.ExecuteNonQuery();
         }
 
         using (var cmd = Command(conn, tx, @"
 INSERT INTO war_players
     (war_id, player_id, name, share_percent, score, unsplit_score,
-     war_hits, bonus_hits, outside_hits, shared_hits, assist_hits, payout)
+     war_hits, bonus_hits, outside_hits, shared_hits, assist_hits, payout,
+     hospital_hits, chain_saving_hits)
 VALUES
     ($war, $player, $name, $share, $score, $unsplit,
-     $warHits, $bonusHits, $outsideHits, $sharedHits, $assistHits, $payout)"))
+     $warHits, $bonusHits, $outsideHits, $sharedHits, $assistHits, $payout,
+     $hospitalHits, $chainSavingHits)"))
         {
             var pWar = cmd.Parameters.Add("$war", SqliteType.Integer);
             var pPlayer = cmd.Parameters.Add("$player", SqliteType.Integer);
@@ -294,9 +306,7 @@ VALUES
             var pAssistHits = cmd.Parameters.Add("$assistHits", SqliteType.Integer);
             var pPayout = cmd.Parameters.Add("$payout", SqliteType.Integer);
             var pHospitalHits = cmd.Parameters.Add("$hospitalHits", SqliteType.Integer);
-            var AssistScoreFraction = cmd.Parameters.Add("$assistFraction", SqliteType.Integer);
-
-
+            var pChainSavingHits = cmd.Parameters.Add("$chainSavingHits", SqliteType.Integer);
 
             foreach (var p in result.Players)
             {
@@ -313,6 +323,7 @@ VALUES
                 pAssistHits.Value = p.AssistHits;
                 pPayout.Value = p.Payout;
                 pHospitalHits.Value = p.HospitalHits;
+                pChainSavingHits.Value = p.ChainSavingHits;
                 cmd.ExecuteNonQuery();
             }
         }

@@ -17,9 +17,11 @@ internal static class WarPayEngine
             .Where(attack => attack.AttackerId is not null && attack.AttackerFactionId == factionId)
             .ToList();
 
+        var gaps = ChainGaps.SecondsSincePreviousHit(ourAttacks);
+
         // 2. Work out what each of our hits is worth (HitScorer.cs).
         var hits = ourAttacks
-            .Select(attack => HitScorer.Score(attack, options))
+            .Select(attack => HitScorer.Score(attack, options, gaps))
             .OfType<ScoredHit>()
             .ToList();
 

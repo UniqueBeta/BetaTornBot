@@ -14,6 +14,18 @@ internal sealed record WarPayOptions
         10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000
     };
 
+    /// <summary>
+    /// how long there can be left on the timer before an outside hit gets scored as chain saving
+    /// </summary>
+    /// <summary>A chain dies when this many seconds pass without a hit.</summary>
+    public int ChainTimeoutSeconds { get; } = 300;
+
+    /// <summary>
+    /// An outside hit is chain-saving if the chain had this many seconds or less left when it landed
+    /// (120 = hit at least 3 minutes after the last one). 0 turns chain-saving off.
+    /// </summary>
+    public int OutsideChainSavingSecondsLeft { get; set; } = 90;
+
     /// <summary>A hit made at one of these chain numbers is a bonus hit.</summary>
     public IReadOnlySet<int> ChainBonusMilestones { get; init; } = DefaultChainBonusMilestones;
 
@@ -21,10 +33,10 @@ internal sealed record WarPayOptions
     public double BonusHitScore { get; init; } = 10;
 
     /// <summary>Score for a successful hit on a player outside the war.</summary>
-    public double OutsideHitScore { get; init; } = 3;
+    public double OutsideHitScore { get; init; } = 1;
 
     /// <summary>Outside hits only score while the chain is strictly above this number.</summary>
-    public int OutsideChainThreshold { get; init; } = 100;
+    public int OutsideChainThreshold { get; init; } = 50;
 
     /// <summary>Extra score for a scoring hit that hospitalised a member of our faction. 0 turns it off.</summary>
     public double HospitalBonusScore { get; init; } = 0;
@@ -42,4 +54,9 @@ internal sealed record WarPayOptions
     /// if the value is above 1 the assister will instead be granted a static amount of score equal to the value of this property
     // / </summary>
     public double AssistScoreFraction { get; init; } = 0.5;
+
+    /// <summary>Score for an outside hit that comes more than OutsideMinGapMinutes after the previous chain hit.</summary>
+    public double OutsideChainSavingHitScore { get; init; } = 6;
+
+    //the following two values probably shouldnt be kept here as theyre static constant, but oh well
 }

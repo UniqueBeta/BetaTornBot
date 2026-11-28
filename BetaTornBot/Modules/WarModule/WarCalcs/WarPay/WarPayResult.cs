@@ -58,4 +58,7 @@ public sealed class PlayerWarPay
 
     /// <summary>Fellow faction members this player hospitalised.</summary>
     public int HospitalHits { get; init; }
+
+    /// <summary>Outside hits made when the chain was about to die. They score OutsideChainSavingHitScore.</summary>
+    public int ChainSavingHits { get; init; }
 }

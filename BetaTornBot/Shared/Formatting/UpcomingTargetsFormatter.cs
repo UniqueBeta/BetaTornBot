@@ -16,7 +16,7 @@ namespace BetaTornBot.Shared.Formatting
         /// Keeps the first <paramref name="limit"/> lines, reverses them, and groups them into messages.
         /// Long lists come back as several messages: send them one after another.
         /// </summary>
-        /// <param name="lines">One line per enemy member, soonest okay first.</param>
+        /// <param name="lines">One line per enemy member, soonest okay first.</param> 
         /// <param name="limit">How many targets to show.</param>
         /// <param name="maxMessageLength">Maximum characters per message (Discord's limit is 2000).</param>
         public static IReadOnlyList<string> ToMessages(

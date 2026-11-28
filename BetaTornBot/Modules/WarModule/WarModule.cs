@@ -33,7 +33,9 @@ namespace BetaTornBot.Modules.WarModule
         [Summary("faction-take", "Percentage of war pay that goes to the faction in percentage (20 = 20%)")] double factionTake = 20,
         [Summary("assist-window", "Number of seconds before the hit started (or 0 for only overlapping")] int assistWindowSeconds = 10,
         [Summary("hospital-bonus", "Score for a hit that hospitalized a fellow faction member (0 = off)")] double hospitalBonusScore = 0,
-        [Summary("assist-score-fraction", "Fraction of the total score that goes to assists, or static value if above 1")] double assistScoreFraction = 0.5)
+        [Summary("assist-score-fraction", "Fraction of the total score that goes to assists, or static value if above 1")] double assistScoreFraction = 0.5,
+        [Summary("outside-chain-saving-hit-score", "Score for an outside hit saving chain")] double outsideChainSavingHitScore = 6,
+        [Summary("saving-hit-second-threshold", "How many seconds remaining on chain for a hit to be saving")] int outsideChainSavingThreshold = 90)
         {
             // Discord only allows 3 seconds for the first reply, and fetching a war from Torn can take longer.
             // Acknowledge now, then send the table with FollowupAsync once it is ready.
@@ -50,7 +52,9 @@ namespace BetaTornBot.Modules.WarModule
                     factionTake,
                     assistWindowSeconds,
                     hospitalBonusScore,
-                    assistScoreFraction
+                    assistScoreFraction,
+                    outsideChainSavingHitScore,
+                    outsideChainSavingThreshold
                     );
 
                 if (target == CommandTarget.Discord)
