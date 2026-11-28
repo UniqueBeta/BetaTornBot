@@ -73,39 +73,7 @@ WHERE w.id = $id AND w.faction_id = $faction";
 
         if (saved != settings) return null;
 
-        var players = new List<PlayerWarPay>();
-        using (var cmd = conn.CreateCommand())
-        {
-            cmd.CommandText = @"
-SELECT player_id, name, share_percent, score, unsplit_score,
-       war_hits, bonus_hits, outside_hits, shared_hits, assist_hits, payout,
-       hospital_hits, chain_saving_hits
-FROM war_players
-WHERE war_id = $id
-ORDER BY share_percent DESC, player_id";
-            cmd.Parameters.AddWithValue("$id", warId);
-
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
-            {
-                players.Add(new PlayerWarPay
-                {
-                    Id = reader.GetInt64(0),
-                    Name = reader.GetString(1),
-                    SharePercent = reader.GetDouble(2),
-                    Score = reader.GetInt64(3),
-                    UnsplitScore = reader.GetInt64(4),
-                    WarHits = (int)reader.GetInt64(5),
-                    BonusHits = (int)reader.GetInt64(6),
-                    OutsideHits = (int)reader.GetInt64(7),
-                    SharedHits = (int)reader.GetInt64(8),
-                    AssistHits = (int)reader.GetInt64(9),
-                    Payout = reader.GetInt64(10),
-                    HospitalHits = (int)reader.GetInt64(11),
-                    ChainSavingHits = (int)reader.GetInt64(12),
-                });
-            }
-        }
+        var players = LoadPlayers(conn, warId);
 
         return new WarPayResult(players, totalScore)
         {
@@ -331,6 +299,80 @@ VALUES
         tx.Commit();
     }
 
+        /// <summary>The most recently calculated result, whatever settings it used. Null if nothing is saved yet.</summary>
+    public WarPayResult? TryLoadLatestResult()
+    {
+        using var conn = WarPayDatabase.Open(_path);
+
+        long warId, factionId, from, to, totalScore;
+        int attackCount;
+
+        using (var cmd = conn.CreateCommand())
+        {
+            cmd.CommandText = @"
+SELECT w.id, w.faction_id, w.start_time, w.end_time, w.attack_count, r.total_score
+FROM war_results r
+JOIN wars w ON w.id = r.war_id
+ORDER BY r.calculated_at DESC
+LIMIT 1";
+            using var reader = cmd.ExecuteReader();
+            if (!reader.Read()) return null;
+
+            warId = reader.GetInt64(0);
+            factionId = reader.GetInt64(1);
+            from = reader.GetInt64(2);
+            to = reader.GetInt64(3);
+            attackCount = (int)reader.GetInt64(4);
+            totalScore = reader.GetInt64(5);
+        }
+
+        return new WarPayResult(LoadPlayers(conn, warId), totalScore)
+        {
+            FactionId = factionId,
+            WarId = warId,
+            From = from,
+            To = to,
+            AttackCount = attackCount,
+        };
+    }
+
+    private static List<PlayerWarPay> LoadPlayers(SqliteConnection conn, long warId)
+    {
+        var players = new List<PlayerWarPay>();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+SELECT player_id, name, share_percent, score, unsplit_score,
+       war_hits, bonus_hits, outside_hits, shared_hits, assist_hits, payout,
+       hospital_hits, chain_saving_hits
+FROM war_players
+WHERE war_id = $id
+ORDER BY share_percent DESC, player_id";
+        cmd.Parameters.AddWithValue("$id", warId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            players.Add(new PlayerWarPay
+            {
+                Id = reader.GetInt64(0),
+                Name = reader.GetString(1),
+                SharePercent = reader.GetDouble(2),
+                Score = reader.GetInt64(3),
+                UnsplitScore = reader.GetInt64(4),
+                WarHits = (int)reader.GetInt64(5),
+                BonusHits = (int)reader.GetInt64(6),
+                OutsideHits = (int)reader.GetInt64(7),
+                SharedHits = (int)reader.GetInt64(8),
+                AssistHits = (int)reader.GetInt64(9),
+                Payout = reader.GetInt64(10),
+                HospitalHits = (int)reader.GetInt64(11),
+                ChainSavingHits = (int)reader.GetInt64(12),
+            });
+        }
+        return players;
+    }
+
+
     private static SqliteCommand Command(SqliteConnection conn, SqliteTransaction tx, string sql)
     {
         var cmd = conn.CreateCommand();
@@ -338,6 +380,8 @@ VALUES
         cmd.CommandText = sql;
         return cmd;
     }
+
+
 
     private static object ToDb(long? value) => value.HasValue ? value.Value : DBNull.Value;
 

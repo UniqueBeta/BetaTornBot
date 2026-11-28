@@ -66,20 +66,16 @@ namespace BetaTornBot.Modules.WarModule
                 }
                 else
                 {
-                    NumberFormatInfo inv = new()
-                    {
-                        NumberDecimalDigits = 0
-                    };
-
                     var html = WarPayHtml.Build(result, (decimal)totalCacheValue * 1_000_000_000, (decimal)factionTake, true);
-                    if(html.Count < 1)
+                    if (html.Count < 1)
                     {
                         await FollowupAsync("This really should happen, alert beta");
+                        return;
                     }
-                    foreach (var h in html)
-                    {
-                        await FollowupAsync(h);
-                    }
+
+                    // The whole page as one text file, ready to copy and paste.
+                    using var stream = new MemoryStream(Encoding.UTF8.GetBytes(string.Concat(html)));
+                    await FollowupWithFileAsync(stream, "war-pay.txt", "War pay HTML attached.");
                     return;
                 }
             }
@@ -167,6 +163,25 @@ namespace BetaTornBot.Modules.WarModule
                     await FollowupAsync(message);
             });
         }
+
+
+        [SlashCommand("final-payout", "Payout links from the last war pay calculation")]
+        public async Task FinalPayout()
+        {
+            await RunDeferredAsync(async () =>
+            {
+                var result = WarPayCalculator.LoadLastResult();
+                if (result is null)
+                {
+                    await FollowupAsync("No war pay has been calculated yet. Run /warpay first.");
+                    return;
+                }
+
+                foreach (var message in FinalPayoutFormatter.ToDiscordMessages(result))
+                    await FollowupAsync(message);
+            });
+        }
+
         // Discord only allows 3 seconds for a first reply and Torn can be slower than that, so every command
         // acknowledges first and then sends its result as a follow-up. Known failures become a short reply.
         private async Task RunDeferredAsync(Func<Task> work)

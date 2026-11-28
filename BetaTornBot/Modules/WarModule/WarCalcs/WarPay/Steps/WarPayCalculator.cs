@@ -137,6 +137,11 @@ public static class WarPayCalculator
             options.OutsideChainSavingHitScore,
             options.OutsideChainSavingSecondsLeft);
 
+
+    /// <summary>The most recent saved war pay calculation, or null if none has been run yet.</summary>
+    public static WarPayResult? LoadLastResult(string databasePath = DefaultDatabasePath) =>
+        new WarPayStore(databasePath).TryLoadLatestResult();
+
     // The attack log of a war: the saved copy if there is one, otherwise from Torn (and then saved).
     private static async Task<List<Attack>> LoadAttacksAsync(
         TornApiClient api,
